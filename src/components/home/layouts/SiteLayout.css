@@ -1,0 +1,15 @@
+.home {
+  display: flex;
+}
+
+.container {
+  flex: 1;
+}
+
+.container.large {
+  margin-left: 80px;
+}
+
+.main {
+  padding: 20px;
+}
