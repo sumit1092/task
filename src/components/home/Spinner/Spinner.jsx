@@ -1,4 +1,3 @@
-import React from 'react';
 import './Spinner.css';
 
 const Spinner = () => {
@@ -10,3 +9,4 @@ const Spinner = () => {
 }
 
 export default Spinner
+

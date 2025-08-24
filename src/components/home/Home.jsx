@@ -68,35 +68,85 @@
 // };
 
 // export default Home;
-import React, { Suspense } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import LoginPage from "../../authentication/LoginPage";
-import Dashboard from "../home/Dashboard/Dashboard";
-import MyTeam from "../home/MyTeam/MyTeam";
-import MyTask from "../home/MyTask/MyTask";
-import Billing from "../home/Billing/Billing";
-import Settings from "../home/Settings/Settings";
 
-// layout
-import SiteLayout from "./layouts/SiteLayout";
-import Spinner from "../home/Spinner/Spinner";
-import ProtectedRoute from "../../authentication/ProtectedRoute"; // import here
+// import React, { Suspense } from "react";
+// import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
+// import LoginPage from "../../authentication/LoginPage";
+// import Dashboard from "../home/Dashboard/Dashboard";
+// import MyTeam from "../home/MyTeam/MyTeam";
+// import MyTask from "../home/MyTask/MyTask";
+// import Billing from "../home/Billing/Billing";
+// import Settings from "../home/Settings/Settings";
+
+// // layout
+// import SiteLayout from "./layouts/SiteLayout";
+// import Spinner from "../home/Spinner/Spinner";
+// import ProtectedRoute from "../../authentication/ProtectedRoute"; // import here
+
+// const Home = () => {
+//   return (
+//     <BrowserRouter>
+//       <Suspense fallback={<Spinner />}>
+//         <Routes>
+//           {/* Public Route */}
+//           <Route path="/" element={<LoginPage />} />
+
+//           {/* Private Routes */}
+//           <Route
+//             element={
+//              // <ProtectedRoute>
+//                 <SiteLayout />
+//               //</ProtectedRoute> 
+//             }
+//           >
+//             <Route path="/dashboard" element={<Dashboard />} />
+//             <Route path="/myteam" element={<MyTeam />} />
+//             <Route path="/mytask" element={<MyTask />} />
+//             <Route path="/billing" element={<Billing />} />
+//             <Route path="/settings" element={<Settings />} />
+//           </Route>
+
+//           {/* Redirect unknown routes */}
+//           <Route path="*" element={<Navigate to="/" />} />
+//         </Routes>
+//       </Suspense>
+//     </BrowserRouter>
+//   );
+// };
+
+// export default Home;
+
+
+import React, { Suspense, lazy } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+
+import Spinner from './Spinner/Spinner.jsx';
+import ProtectedRoute from '../../authentication/ProtectedRoute.jsx';
+
+const LoginPage = lazy(() => import('../../authentication/LoginPage.jsx'));
+const Dashboard = lazy(() => import('./Dashboard/Dashboard.jsx'));
+const MyTeam = lazy(() => import('./MyTeam/MyTeam.jsx'));
+const MyTask = lazy(() => import('./MyTask/MyTask.jsx'));
+const Billing = lazy(() => import('./Billing/Billing.jsx'));
+const Settings = lazy(() => import('./Settings/Settings.jsx'));
+const SiteLayout = lazy(() => import('./layouts/SiteLayout.jsx'));
 
 const Home = () => {
   return (
     <BrowserRouter>
       <Suspense fallback={<Spinner />}>
         <Routes>
-          {/* Public Route */}
+          {/* Public */}
           <Route path="/" element={<LoginPage />} />
 
-          {/* Private Routes */}
+          {/* Private with layout */}
           <Route
             element={
-             // <ProtectedRoute>
+              <ProtectedRoute>
                 <SiteLayout />
-              //</ProtectedRoute> 
+              </ProtectedRoute>
             }
           >
             <Route path="/dashboard" element={<Dashboard />} />
@@ -106,7 +156,7 @@ const Home = () => {
             <Route path="/settings" element={<Settings />} />
           </Route>
 
-          {/* Redirect unknown routes */}
+          {/* Fallback */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Suspense>
@@ -115,5 +165,3 @@ const Home = () => {
 };
 
 export default Home;
-
-

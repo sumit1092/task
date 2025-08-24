@@ -4,7 +4,6 @@
   width: 100%;
 }
 
-
 .login-page-img {
   flex: 1;
   height: 100vh;
@@ -24,19 +23,18 @@ form {
   justify-content: center;
   background: #fff;
   padding: 20px;
-  gap: 50px;
+  gap: 20px;
 }
 
 .ffc-logo img {
   width: 60px;
-  margin-bottom: 20px;
 }
 
 .login-form {
   display: flex;
   flex-direction: column;
   /* width: 100%; */
-  gap: 15px;
+  gap: 5px;
 }
 
 .login-form input {
@@ -77,13 +75,12 @@ form {
 
 @media (max-width: 600px) {
   .login-page {
-    flex-direction: column; /* stack form vertically */
+    flex-direction: column; 
   }
-
   .login-page-img {
     display: none; 
   }
   .login-form input {
-    width: 100%; /* full width on mobile */
+    width: 100%; 
   }
 }

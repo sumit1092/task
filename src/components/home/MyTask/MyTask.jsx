@@ -1,84 +1,59 @@
-// import { useEffect, useState } from "react"
-// import TaskDataTable from "./TaskDataTable"
-
-// const MyTask = () =>{
-//   const [Country, setCountry] = useState([])
-//   const [filtered, setFiltered] = useState([])
-//   const [search, setSearch] = useState("")
-
-//   const getCountries = async () => {
-//     try{
-//       const res = await fetch("https://jsonplaceholder.typicode.com/users")
-//       const data = await res.json()
-//       console.log("data",data)
-//       setCountry(data) 
-//     }catch(err){
-//       console.log("error =>",err)
-//     }
-//   } 
-
-//   useEffect(()=>{
-//     const result = Country.filter((x)=>{
-//       return x.name.toLowerCase().match(search.toLowerCase())
-//     })
-//     setFiltered(result)
-//   },[search])
-
-//   useEffect(()=>{
-//     getCountries();
-//   },[])
-
-
-//   return(
-//     <>
-//      <div className="d-flex flex-column align-items-center">
-//     </div>
-//       <TaskDataTable Country={Country} filtered = {filtered} setSearch = {setSearch} search={search}/>
-//     </>
-//   )
-// }
-
-// export default MyTask
 import { useEffect, useState } from "react";
-import TaskDataTable from "./TaskDataTable"
+import { Button, Flex, TextInput } from "@mantine/core";
+import { IconSearch } from "@tabler/icons-react";
+import TaskList from "./TaskList.jsx";
+import AddTaskModal from "../modal/AddTaskModal.jsx";
+import { useDispatch } from "react-redux";
+import { fetchTasks } from "../../../redux/slices/taskSlice.jsx";
 
-const MyTask = () => {
-  const [Country, setCountry] = useState([]);
-  const [filtered, setFiltered] = useState([]);
+function MyTask() {
+  const dispatch = useDispatch();
+  const [showModal, setShowModal] = useState(false);
   const [search, setSearch] = useState("");
 
-  const getCountries = async () => {
-    try {
-      const res = await fetch("https://jsonplaceholder.typicode.com/users");
-      const data = await res.json();
-      setCountry(data);
-      setFiltered(data); 
-    } catch (err) {
-      console.log("error =>", err);
-    }
-  };
-
   useEffect(() => {
-    const result = Country.filter((x) =>
-      x.name.toLowerCase().includes(search.toLowerCase())
-    );
-    setFiltered(result);
-  }, [search, Country]);
-
-  useEffect(() => {
-    getCountries();
-  }, []);
+    dispatch(fetchTasks({ Page: 1, PerPage: 10, Search: search }));
+  }, [dispatch, search]);
 
   return (
     <>
-      <TaskDataTable
-        Country={Country}
-        filtered={filtered}
-        setSearch={setSearch}
-        search={search}
+    <div style={{marginTop : "1.5rem"}}>
+      <Flex
+        gap="0.75rem"
+        mb="md"
+        align="center"
+        justify="space-between"
+        wrap="wrap"
+        style={{ width: "100%" }}
+      >
+        <Button
+          onClick={() =>
+            dispatch(fetchTasks({ Page: 1, PerPage: 10, Search: search }))
+          }
+        >
+          Filter
+        </Button>
+
+        <TextInput
+          leftSection={<IconSearch size={18} />}
+          placeholder="Search by title"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ flexGrow: 1, maxWidth: 300 }}
+        />
+
+        <Button onClick={() => setShowModal(true)}>Add Task</Button>
+      </Flex>
+
+      <TaskList />
+
+      <AddTaskModal
+        opened={showModal}
+        handleClose={() => setShowModal(false)}
       />
+    </div>
     </>
   );
-};
+}
 
 export default MyTask;

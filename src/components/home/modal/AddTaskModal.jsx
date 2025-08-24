@@ -1,219 +1,249 @@
-import React, { useState } from "react";
-import { Modal, Button, Form } from "react-bootstrap";
-import * as Yup from "yup";
-import { Formik, Form as FormikForm, Field, ErrorMessage } from "formik";
-import AddUsersModal from "./AddUsersModal";
-import "./AddTaskModal.css";
+import { useEffect } from 'react';
+import {
+  Modal,
+  Button,
+  Group,
+  Tooltip,
+  TextInput,
+  Textarea,
+  Select,
+  MultiSelect,
+  FileInput
+} from '@mantine/core';
+import { DateInput } from '@mantine/dates';
+import { Formik, Form } from 'formik';
+import * as Yup from 'yup';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  addTask,
+  fetchMembers,
+  fetchTasks,
+  fetchLeads
+} from '../../../redux/slices/taskSlice.jsx';
+import {
+  showErrorNotification,
+  showSuccessNotification
+} from '../../../utility/index.jsx';
+import { format } from 'date-fns';
+import './AddTaskModal.css';
 
-const AddTaskModal = ({ show, handleClose }) => {
-  const [selectedUsers, setSelectedUsers] = useState([]);
-  const [activeTab, setActiveTab] = useState("others"); // 'others' or 'me'
+const TITLE_REGEX = /^[A-Za-z ]+$/;
 
-  const validationSchema = Yup.object().shape({
-    title: Yup.string()
-      .matches(/^[A-Za-z\s]+$/, "Only alphabets are allowed")
-      .required("Task title is required"),
-    dueDate: Yup.date()
-      .required("Due date is required")
-      .min(
-        new Date(new Date().setDate(new Date().getDate() + 1)),
-        "Due date must be greater than today"
-      ),
-    file: Yup.mixed()
-      .required("File is required")
-      .test("fileSize", "File size must be less than 2 MB", (value) => {
-        return value && value.size <= 2 * 1024 * 1024;
-      }),
+const fileToBase64 = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
   });
 
-  const convertToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
-  };
+function AddTaskModal({ opened, handleClose }) {
+  const dispatch = useDispatch();
+  const { members, leads } = useSelector((s) => s.task);
 
-  const handleSubmit = async (values, { resetForm, setSubmitting }) => {
-    const fileBase64 = await convertToBase64(values.file);
-
-    const payload = {
-      ...values,
-      users: selectedUsers, // include selected users
-      file: fileBase64,
-    };
-
-    console.log("Final Task Payload:", payload);
-
-    setTimeout(() => {
-      alert("Task Added Successfully");
-      resetForm();
-      setSubmitting(false);
-      handleClose();
-    }, 1000);
-  };
-
-  // State for Add Users modal
-  const [showUsersModal, setShowUsersModal] = useState(false);
+  useEffect(() => {
+    if (opened) {
+      dispatch(fetchMembers());
+      dispatch(fetchLeads());
+    }
+  }, [opened, dispatch]);
 
   return (
-    <>
-      {/* Main Add Task Modal */}
-      <Modal
-        show={show}
-        onHide={handleClose}
-        size="lg"
-        centered
-        backdrop="static"
-        className="add-task-modal"
+    <Modal
+      opened={opened}
+      onClose={handleClose}
+      title="Add Task"
+      centered
+      closeOnClickOutside={false}
+      size = "xl"
+    >
+      <Formik
+        initialValues={{
+          title: '',
+          description: '',
+          assignees: [],
+          dueDate: null,
+          priority: 'Medium',
+          leadId: '',
+          file: null,
+        }}
+        validationSchema={Yup.object({
+          title: Yup.string()
+            .matches(TITLE_REGEX, 'Only alphabets and spaces are allowed')
+            .required('Task title is required'),
+          description: Yup.string().required('Description is required'),
+          // assignees: Yup.array()
+          //   .min(1, 'Select at least one assignee'),
+          //   .required('Assignees are required'),
+          dueDate: Yup.date()
+            .required('Due date is required')
+            .nullable()
+            .test('future-date', 'Due date must be in the future', (val) => {
+              if (!val) return false;
+              const today = new Date(); today.setHours(0, 0, 0, 0);
+              return new Date(val) > today;
+            }),
+          priority: Yup.string().required('Priority is required'),
+          // leadId: Yup.string().required('Lead is required'),
+          file: Yup.mixed()
+            .test('fileSize', 'File must be ≤ 2MB', (file) => {
+              if (!file) return true;
+              return file.size <= 2 * 1024 * 1024;
+            }),
+        })}
+        onSubmit={async (values, { setSubmitting, resetForm }) => {
+          try {
+            let attachmentBase64;
+            if (values.file) {
+              attachmentBase64 = await fileToBase64(values.file);
+            }
+
+            const payload = {
+              Title: values.title.trim(),
+              Description: values.description,
+              DueDate: format(new Date(values.dueDate), 'yyyy-MM-dd'),
+              AssigneeIds: values.assignees,
+              Priority: values.priority,
+              LeadId: values.leadId,
+              AttachmentBase64: attachmentBase64,
+            };
+
+            await dispatch(addTask(payload)).unwrap();
+            showSuccessNotification('Task added successfully!');
+            resetForm();
+            handleClose();
+            dispatch(fetchTasks({ Page: 1, PerPage: 10 }));
+          } catch (e) {
+            showErrorNotification(e?.message || 'Failed to add task');
+          } finally {
+            setSubmitting(false);
+          }
+        }}
       >
-        <Modal.Header closeButton>
-          <Modal.Title className="modal-title">Add Task</Modal.Title>
-        </Modal.Header>
-
-        {/* Tabs */}
-        <div className="add-task-tabs">
-          <button
-            type="button"
-            className={activeTab === "others" ? "active" : ""}
-            onClick={() => setActiveTab("others")}
-          >
-            Assign to Others
-          </button>
-          <button
-            type="button"
-            className={activeTab === "me" ? "active" : ""}
-            onClick={() => setActiveTab("me")}
-          >
-            Assign to Me
-          </button>
-        </div>
-
-        <Formik
-          initialValues={{
-            title: "",
-            dueDate: "",
-            file: null,
-          }}
-          validationSchema={validationSchema}
-          onSubmit={handleSubmit}
-        >
-          {({ setFieldValue, isSubmitting }) => (
-            <FormikForm>
-              <Modal.Body>
-                {/* Task Title */}
-              <div className="row">
-              <div className="mt-5">
-                <Form.Group>
-                  <Field
-                    name="title"
-                    className="form-control"
-                    placeholder="Enter task title"
-                  />
-                  <ErrorMessage
-                    name="title"
-                    component="div"
-                    className="text-danger"
-                  />
-                </Form.Group>
+        {({ values, setFieldValue, touched, errors, isSubmitting }) => (
+          <Form>
+            {/* Title */}
+            <Tooltip label="Only alphabets and spaces allowed" withArrow>
+              <div className="mt-2">
+                <TextInput 
+                  className="field"
+                  label="Task Title"
+                  placeholder="Enter task title"
+                  value={values.title}
+                  onChange={(e) => setFieldValue('title', e.target.value)}
+                  withAsterisk
+                  error={touched.title && errors.title}
+                />
               </div>
-                
-                {/* <div className="col-md-6"> */}
-                <Form.Group className="mt-5">
-                  <Form.Control
-                    as="textarea"
-                    rows={1}
-                    placeholder="Enter description"
-                  />
-                </Form.Group>
-                {/* </div> */}
+            </Tooltip>
 
+            {/* Description */}
+            <div className="mt-4">
+              <Textarea
+                className="field"
+                label="Description"
+                placeholder="Enter description"
+                value={values.description}
+                onChange={(e) => setFieldValue('description', e.target.value)}
+                withAsterisk
+                error={touched.description && errors.description}
+              />
+            </div>
+
+            {/* Lead Select */}
+            <div className="mt-4 ">
+              <Select
+                className="field"
+                label="Select Lead"
+                placeholder="Pick a lead"
+                data={(leads || []).map((l) => ({
+                  value: String(l.id),
+                  label: l.name,
+                }))}
+                value={values.leadId}
+                onChange={(val) => setFieldValue('leadId', val)}
+                searchable
+                withAsterisk
+                error={touched.leadId && errors.leadId}
+              />
+            </div>
+
+            {/* Assignees & Due Date */}
+            <div className="flex gap-4 mt-4 ">
+              <div className="flex-1">
+                <Select
+                  className="field"
+                  label="Assignees"
+                  placeholder="Pick users"
+                  data={(members || []).map((u) => ({
+                    value: String(u.id),
+                    label: u.name,
+                  }))}
+                  value={values.assignees}
+                  onChange={(v) => setFieldValue('assignees', v)}
+                  searchable
+                  withAsterisk
+                  error={touched.assignees && errors.assignees}
+                />
               </div>
 
+              <div className="flex-1 field">
+                <DateInput
+                  className="field"
+                  label="Due Date"
+                  placeholder="Pick date"
+                  value={values.dueDate}
+                  onChange={(d) => setFieldValue('dueDate', d)}
+                  withAsterisk
+                  minDate={new Date()}
+                  error={touched.dueDate && errors.dueDate}
+                />
+              </div>
+            </div>
 
+            {/* Priority */}
+            <div className="mt-4 field">
+              <Select
+                className="field"
+                label="Select Priority"
+                value={values.priority}
+                onChange={(val) => setFieldValue('priority', val)}
+                data={[
+                  { value: 'High', label: 'High' },
+                  { value: 'Medium', label: 'Medium' },
+                  { value: 'Low', label: 'Low' },
+                ]}
+                withAsterisk
+                error={touched.priority && errors.priority}
+              />
+            </div>
 
+            {/* File Upload */}
+            <div className="mt-4 field">
+              <FileInput
+                className="field"
+                label="Attachment (optional)"
+                placeholder="Choose file (max 2MB)"
+                value={values.file}
+                onChange={(f) => setFieldValue('file', f)}
+                error={touched.file && errors.file}
+              />
+            </div>
 
-                <div className="d-flex gap-2 mt-5">
-                  <Form.Group className="mb-3 flex-fill">
-                    <Form.Select>
-                      <option>Select...</option>
-                    </Form.Select>
-                  </Form.Group>
-                  <Form.Group className="mb-3 flex-fill">
-                    <Form.Control type="date" placeholder="Due Date"/>
-                  </Form.Group>
-                </div>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Select Priority</Form.Label>
-                  <Form.Select>
-                    <option>High</option>
-                    <option>Medium</option>
-                    <option>Low</option>
-                  </Form.Select>
-                </Form.Group>
-
-                {activeTab === "others" && (
-                  <Form.Group className="mb-3">
-                    <Form.Label>Add Users *</Form.Label>
-                    <Button
-                      variant="outline-primary"
-                      size="sm"
-                      className="ms-2"
-                    >
-                      Add Users
-                    </Button>
-                  </Form.Group>
-                )}
-
-                {/* File Upload */}
-                <Form.Group className="mt-3">
-                  <input
-                    type="file"
-                    className="form-control"
-                    placeholder="Attach file"
-                    onChange={(event) => {
-                      setFieldValue("file", event.currentTarget.files[0]);
-                    }}
-                  />
-                  <ErrorMessage
-                    name="file"
-                    component="div"
-                    className="text-danger"
-                  />
-                </Form.Group>
-              </Modal.Body>
-              <Modal.Footer>
-                <button
-                  type="button"
-                  className="btn-cancel"
-                  onClick={handleClose}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn-add"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Saving..." : "Add"}
-                </button>
-              </Modal.Footer>
-            </FormikForm>
-          )}
-        </Formik>
-      </Modal>
-
-      {/* Add Users Modal */}
-      <AddUsersModal
-        show={showUsersModal}
-        handleClose={() => setShowUsersModal(false)}
-        setSelectedUsers={setSelectedUsers}
-        selectedUsers={selectedUsers}
-      />
-    </>
+            {/* Action Buttons */}
+            <Group justify="flex-end" mt="lg">
+              <Button variant="default" onClick={handleClose}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : 'Save'}
+              </Button>
+            </Group>
+          </Form>
+        )}
+      </Formik>
+    </Modal>
   );
-};
+}
 
 export default AddTaskModal;

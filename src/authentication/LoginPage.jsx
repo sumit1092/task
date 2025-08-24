@@ -1,48 +1,49 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import loginImg from "../assets/images/login.jpg";
-import ffclogo from "../assets/images/FFC-logo.png";
-import "./LoginPage.css";
-import { Formik, Form, ErrorMessage } from "formik";
-import * as Yup from "yup";
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { loginThunk } from '../redux/slices/authSlice.jsx';
+import { showErrorNotification, showSuccessNotification } from '../utility/index.jsx';
+import { Button, TextInput } from '@mantine/core';
+import { Formik, Form, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
 
-const LoginPage = () => {
+import loginImg from '../assets/images/login.jpg';
+import ffclogo from '../assets/images/FFC-logo.png';
+import './LoginPage.css';
+
+export default function LoginPage() {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
 
   const initialValues = {
-    mobile: "",
-    password: "",
+    mobile: '',
+    password: '',
   };
 
   const validationSchema = Yup.object().shape({
     mobile: Yup.string()
-      .matches(/^\d{10}$/, "Mobile number must be exactly 10 digits")
-      .required("Mobile Number is required"),
+      .matches(/^\d{10}$/, 'Mobile number must be exactly 10 digits')
+      .required('Mobile number is required'),
     password: Yup.string()
-      .min(8, "Password must be at least 8 characters")
-      .required("Password is required"),
+      .min(8, 'Password must be at least 8 characters')
+      .required('Password is required'),
   });
 
-  const onSubmit = async (values) => {
-    setLoading(true);
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    if (values.mobile === "1234567890" && values.password === "password123") {
-      navigate("/dashboard");
-    } else {
-      alert("Invalid mobile number or password");
+  const onSubmit = async (values, { setSubmitting }) => {
+    try {
+      await dispatch(loginThunk({ username: values.mobile, password: values.password })).unwrap();
+      showSuccessNotification('Logged in');
+      navigate('/dashboard');
+    } catch (err) {
+      showErrorNotification(err?.message || 'Login failed');
+    } finally {
+      setSubmitting(false);
     }
-
-    setLoading(false);
   };
 
   const handleMobileChange = (e, setFieldValue) => {
-  const value = e.target.value.replace(/\D/g, "").slice(0, 10);
-  setFieldValue("mobile", value);
-};
+    const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
+    setFieldValue('mobile', cleaned);
+  };
 
   return (
     <div className="login-page">
@@ -55,52 +56,47 @@ const LoginPage = () => {
         validationSchema={validationSchema}
         onSubmit={onSubmit}
       >
-        {(formik) => (
+        {({ values, handleChange, handleBlur, setFieldValue, isSubmitting }) => (
           <Form>
             <div className="ffc-logo">
               <img src={ffclogo} alt="ffc-logo" />
             </div>
-            <h6>Get Started with BETA Field Force</h6>
+            <h4>Get Started with BETA Field Force</h4>
 
             <div className="login-form">
-              <input
-                type="tel"
+              <TextInput
+                label="Mobile"
                 name="mobile"
                 placeholder="Mobile Number"
-                value={formik.values.mobile}
-                onChange={(e) => handleMobileChange(e, formik.setFieldValue)}
-                onBlur={formik.handleBlur}
-                maxLength={10}
+                value={values.mobile}
+                onChange={(e) => handleMobileChange(e, setFieldValue)}
+                onBlur={handleBlur}
               />
-              <ErrorMessage
-                name="mobile"
-                component="div"
-                className="error-message"
-              />
+              <div className="error-message">
+                <ErrorMessage name="mobile" />
+              </div>
 
-              <input
-                type="password"
+              <TextInput
+                label="Password"
                 name="password"
                 placeholder="Password"
-                value={formik.values.password}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
+                type="password"
+                value={values.password}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                mt="md"
               />
-              <ErrorMessage
-                name="password"
-                component="div"
-                className="error-message"
-              />
+              <div className="error-message">
+                <ErrorMessage name="password" />
+              </div>
 
-              <button type="submit" disabled={loading}>
-                {loading ? "Logging in..." : "Login"}
-              </button>
+              <Button type="submit" fullWidth mt="lg" loading={isSubmitting}>
+                {isSubmitting ? 'Logging in...' : 'Login'}
+              </Button>
             </div>
           </Form>
         )}
       </Formik>
     </div>
   );
-};
-
-export default LoginPage;
+}
