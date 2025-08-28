@@ -2,7 +2,7 @@ import { Check, CircleCheck, CircleDashed, Trash2 } from "lucide-react";
 import { Tooltip, ActionIcon, Group } from "@mantine/core";
 import { format } from "date-fns";
 
-const MyTaskColumn = [
+export const MyTaskColumn = [
   {
     name: "Title",
     selector: (row) => row.Title,
@@ -88,22 +88,22 @@ const MyTaskColumn = [
     cell: (row) => (
       <Group gap="xs">
         <Tooltip label="Accept" withArrow>
-          <ActionIcon onClick={() => handleStatus(row.TaskID || row.id, "ACCEPTED")}>
+          <ActionIcon >
             <Check size={16} />
           </ActionIcon>
         </Tooltip>
         <Tooltip label="Complete" withArrow>
-          <ActionIcon onClick={() => handleStatus(row.TaskID || row.id, "COMPLETED")}>
+          <ActionIcon>
             <CircleCheck size={16} />
           </ActionIcon>
         </Tooltip>
         <Tooltip label="Partial Complete" withArrow>
-          <ActionIcon onClick={() => handleStatus(row.TaskID || row.id, "PARTIAL")}>
+          <ActionIcon>
             <CircleDashed size={16} />
           </ActionIcon>
         </Tooltip>
         <Tooltip label="Delete" withArrow>
-          <ActionIcon color="red" onClick={() => handleDelete(row.TaskID || row.id)}>
+          <ActionIcon>
             <Trash2 size={16} />
           </ActionIcon>
         </Tooltip>
@@ -112,4 +112,3 @@ const MyTaskColumn = [
   },
 ];
 
-export default MyTaskColumn;

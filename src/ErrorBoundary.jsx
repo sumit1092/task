@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import { Component } from "react";
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -28,11 +28,12 @@ class ErrorBoundary extends Component {
           }}
         >
           <h2>Something went wrong. Please try again later.</h2>
-          {/* Show real error message in dev */}
-          {process.env.NODE_ENV === "development" && (
-            <pre style={{ color: "red", marginTop: "1rem" }}>
-              {String(this.state.error)}
-            </pre>
+          {this.state.error && (
+            <details style={{ whiteSpace: "pre-wrap" }}>
+              {this.state.error.toString()}
+              <br />
+              {this.state.error.stack}
+            </details>
           )}
         </div>
       );

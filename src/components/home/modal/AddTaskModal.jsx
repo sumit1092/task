@@ -7,7 +7,6 @@ import {
   TextInput,
   Textarea,
   Select,
-  MultiSelect,
   FileInput
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
@@ -72,9 +71,9 @@ function AddTaskModal({ opened, handleClose }) {
             .matches(TITLE_REGEX, 'Only alphabets and spaces are allowed')
             .required('Task title is required'),
           description: Yup.string().required('Description is required'),
-          // assignees: Yup.array()
-          //   .min(1, 'Select at least one assignee'),
-          //   .required('Assignees are required'),
+          assignees: Yup.array()
+            .min(1, 'Select at least one assignee')
+            .required('Assignees are required'),
           dueDate: Yup.date()
             .required('Due date is required')
             .nullable()
@@ -84,7 +83,7 @@ function AddTaskModal({ opened, handleClose }) {
               return new Date(val) > today;
             }),
           priority: Yup.string().required('Priority is required'),
-          // leadId: Yup.string().required('Lead is required'),
+          leadId: Yup.string().required('Lead is required'),
           file: Yup.mixed()
             .test('fileSize', 'File must be ≤ 2MB', (file) => {
               if (!file) return true;
@@ -122,7 +121,6 @@ function AddTaskModal({ opened, handleClose }) {
       >
         {({ values, setFieldValue, touched, errors, isSubmitting }) => (
           <Form>
-            {/* Title */}
             <Tooltip label="Only alphabets and spaces allowed" withArrow>
               <div className="mt-2">
                 <TextInput 
@@ -137,7 +135,6 @@ function AddTaskModal({ opened, handleClose }) {
               </div>
             </Tooltip>
 
-            {/* Description */}
             <div className="mt-4">
               <Textarea
                 className="field"
@@ -150,7 +147,6 @@ function AddTaskModal({ opened, handleClose }) {
               />
             </div>
 
-            {/* Lead Select */}
             <div className="mt-4 ">
               <Select
                 className="field"
@@ -168,7 +164,6 @@ function AddTaskModal({ opened, handleClose }) {
               />
             </div>
 
-            {/* Assignees & Due Date */}
             <div className="flex gap-4 mt-4 ">
               <div className="flex-1">
                 <Select
@@ -201,7 +196,6 @@ function AddTaskModal({ opened, handleClose }) {
               </div>
             </div>
 
-            {/* Priority */}
             <div className="mt-4 field">
               <Select
                 className="field"
@@ -218,7 +212,6 @@ function AddTaskModal({ opened, handleClose }) {
               />
             </div>
 
-            {/* File Upload */}
             <div className="mt-4 field">
               <FileInput
                 className="field"
@@ -230,7 +223,6 @@ function AddTaskModal({ opened, handleClose }) {
               />
             </div>
 
-            {/* Action Buttons */}
             <Group justify="flex-end" mt="lg">
               <Button variant="default" onClick={handleClose}>
                 Cancel

@@ -3,12 +3,14 @@ import { Button, Flex, TextInput } from "@mantine/core";
 import { IconSearch } from "@tabler/icons-react";
 import TaskList from "./TaskList.jsx";
 import AddTaskModal from "../modal/AddTaskModal.jsx";
+import FilterModal from "../modal/FilterModal.jsx";  
 import { useDispatch } from "react-redux";
 import { fetchTasks } from "../../../redux/slices/taskSlice.jsx";
 
 function MyTask() {
   const dispatch = useDispatch();
-  const [showModal, setShowModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showFilterModal, setShowFilterModal] = useState(false);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -16,8 +18,7 @@ function MyTask() {
   }, [dispatch, search]);
 
   return (
-    <>
-    <div style={{marginTop : "1.5rem"}}>
+    <div style={{ marginTop: "1.5rem" }}>
       <Flex
         gap="0.75rem"
         mb="md"
@@ -26,13 +27,7 @@ function MyTask() {
         wrap="wrap"
         style={{ width: "100%" }}
       >
-        <Button
-          onClick={() =>
-            dispatch(fetchTasks({ Page: 1, PerPage: 10, Search: search }))
-          }
-        >
-          Filter
-        </Button>
+        <Button onClick={() => setShowFilterModal(true)}>Filter</Button>
 
         <TextInput
           leftSection={<IconSearch size={18} />}
@@ -42,17 +37,14 @@ function MyTask() {
           style={{ flexGrow: 1, maxWidth: 300 }}
         />
 
-        <Button onClick={() => setShowModal(true)}>Add Task</Button>
+        <Button onClick={() => setShowAddModal(true)}>Add Task</Button>
       </Flex>
 
       <TaskList />
 
-      <AddTaskModal
-        opened={showModal}
-        handleClose={() => setShowModal(false)}
-      />
+      <AddTaskModal opened={showAddModal} handleClose={() => setShowAddModal(false)} />
+      <FilterModal opened={showFilterModal} handleClose={() => setShowFilterModal(false)} />
     </div>
-    </>
   );
 }
 

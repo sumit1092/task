@@ -19,7 +19,6 @@ const Header = ({ setShowSidebar }) => {
     menuData[0].submenu.find((item) => item.link === location.pathname)?.name ||
     "FFC";
 
-  // clock effect
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
@@ -37,7 +36,6 @@ const Header = ({ setShowSidebar }) => {
     return () => clearInterval(timer);
   }, []);
 
-  // modal close
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -68,7 +66,7 @@ const Header = ({ setShowSidebar }) => {
     <div className="header">
       <div className="left-section">
         <button className="menu-btn" onClick={setShowSidebar}>
-          {currentMenu} {/* ✅ dynamic */}
+          {currentMenu} 
         </button>
       </div>
 

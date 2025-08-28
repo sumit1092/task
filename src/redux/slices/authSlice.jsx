@@ -20,7 +20,6 @@ export const loginThunk = createAsyncThunk(
         );
       }
 
-      // ✅ Use referralToken as the real JWT
       const token = res.data.referralToken;
       if (!token) return rejectWithValue("No JWT returned from API");
 

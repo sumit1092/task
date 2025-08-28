@@ -10,7 +10,6 @@ import {
 } from '../../utility/apiEndpoint.jsx';
 import { getToken } from '../../utility/localStorageUtils.jsx';
 
-// ✅ Fetch company members for MultiSelect
 export const fetchMembers = createAsyncThunk('task/fetchMembers', async () => {
   const res = await privateRequest.get(MEMBER);
   const list = res.data?.data || [];
@@ -20,7 +19,6 @@ export const fetchMembers = createAsyncThunk('task/fetchMembers', async () => {
   }));
 });
 
-// ✅ Fetch leads when opening Add Task modal
 export const fetchLeads = createAsyncThunk('task/fetchLeads', async () => {
   const token = getToken();
   if (!token) throw new Error("No token found");
@@ -31,11 +29,10 @@ export const fetchLeads = createAsyncThunk('task/fetchLeads', async () => {
 
   return list.map((l) => ({
     id: l.Id,
-    name: l.LeadName, // ✅ Correct key from API
+    name: l.LeadName, 
   }));
 });
 
-// ✅ Fetch tasks assigned to me
 export const fetchTasks = createAsyncThunk('task/fetchTasks', async (payload = {}) => {
   const res = await privateRequest.post(TASK, payload);
   const data = res.data?.data || {};
@@ -45,13 +42,11 @@ export const fetchTasks = createAsyncThunk('task/fetchTasks', async (payload = {
   };
 });
 
-// ✅ Add task
 export const addTask = createAsyncThunk('task/addTask', async (payload) => {
   const res = await privateRequest.post(ADDTASK, payload);
   return res.data?.data || res.data;
 });
 
-// ✅ Update task status
 export const updateTaskStatus = createAsyncThunk(
   'task/updateTaskStatus',
   async ({ taskId, status }) => {
@@ -63,7 +58,6 @@ export const updateTaskStatus = createAsyncThunk(
   }
 );
 
-// ✅ Archive/Delete task
 export const deleteTask = createAsyncThunk('task/deleteTask', async (taskId) => {
   const res = await privateRequest.post(TASKARCHIVE, { TaskId: taskId });
   return { taskId, result: res.data };
@@ -82,17 +76,14 @@ const taskSlice = createSlice({
   reducers: {},
   extraReducers: (b) => {
     b
-      // Members
       .addCase(fetchMembers.fulfilled, (s, a) => {
         s.members = a.payload;
       })
 
-      // Leads
       .addCase(fetchLeads.fulfilled, (s, a) => {
         s.leads = a.payload;
       })
 
-      // Tasks
       .addCase(fetchTasks.pending, (s) => {
         s.loading = true;
         s.error = null;
@@ -107,14 +98,12 @@ const taskSlice = createSlice({
         s.error = a.error.message || 'Failed';
       })
 
-      // Add Task
       .addCase(addTask.fulfilled, (s, a) => {
         if (a.payload) {
-          s.tasks.unshift(a.payload); // optimistically add new task to list
+          s.tasks.unshift(a.payload);
         }
       })
 
-      // Delete Task
       .addCase(deleteTask.fulfilled, (s, a) => {
         s.tasks = s.tasks.filter(
           (t) => String(t.id ?? t.TaskId) !== String(a.payload.taskId)

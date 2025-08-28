@@ -10,7 +10,7 @@ import loginImg from '../assets/images/login.jpg';
 import ffclogo from '../assets/images/FFC-logo.png';
 import './LoginPage.css';
 
-export default function LoginPage() {
+function LoginPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -100,3 +100,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+export default LoginPage;
